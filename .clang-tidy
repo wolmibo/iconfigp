@@ -1,0 +1,16 @@
+Checks: >
+  bugprone-*,
+    -bugprone-easily-swappable-parameters,
+  concurrency-*,
+  cppcoreguidelines-*,
+  misc-*,
+    -misc-const-correctness,
+    -misc-no-recursion,
+  modernize-*,
+    -modernize-use-trailing-return-type,
+  performance-*,
+  readability-*,
+    -readability-identifier-length
+
+
+UseColor: true
