@@ -1,3 +1,4 @@
+#include "iconfigp/color.hpp"
 #include <iconfigp/exception.hpp>
 #include <iconfigp/key-value.hpp>
 #include <iconfigp/value-parser.hpp>
@@ -7,6 +8,11 @@
 #include <stdexcept>
 #include <iostream>
 #include <array>
+
+std::ostream& operator<<(std::ostream& out, const iconfigp::rgba_f32& me) {
+  return out << '(' << me[0] << ", " << me[1] << ", "
+    << me[2] << ", " << me[3] << ')';
+}
 
 template<typename T>
 std::string to_string(std::optional<T> value) {
@@ -48,6 +54,7 @@ enum class my_enum {
 std::ostream& operator<<(std::ostream& out, my_enum me) {
   return out << static_cast<int>(me);
 }
+
 
 template<>
 struct iconfigp::case_insensitive_parse_lut<my_enum> {
@@ -133,6 +140,21 @@ int main() { // NOLINT(*exception-escape)
   parse_value<my_enum>("bar", my_enum::bar);
 
   parse_value<my_enum>("fo", {});
-  //
+
+
+
+  parse_value<iconfigp::rgba_f32>("",    {});
+  parse_value<iconfigp::rgba_f32>("  ",  {});
+  parse_value<iconfigp::rgba_f32>("foo", {});
+  parse_value<iconfigp::rgba_f32>("#ff", {});
+  parse_value<iconfigp::rgba_f32>("#abcdefgh", {});
+  parse_value<iconfigp::rgba_f32>("#ffffff",   iconfigp::rgba_f32{1., 1., 1., 1.});
+  parse_value<iconfigp::rgba_f32>("#ffFf",     iconfigp::rgba_f32{1., 1., 1., 1.});
+  parse_value<iconfigp::rgba_f32>("#f0f",      iconfigp::rgba_f32{1., 0., 1., 1.});
+  parse_value<iconfigp::rgba_f32>(" f0f",      iconfigp::rgba_f32{1., 0., 1., 1.});
+  parse_value<iconfigp::rgba_f32>("#000000",   iconfigp::rgba_f32{0., 0., 0., 1.});
+  parse_value<iconfigp::rgba_f32>("#00000000", iconfigp::rgba_f32{0., 0., 0., 0.});
+
+
   // NOLINTEND(*-magic-numbers)
 }

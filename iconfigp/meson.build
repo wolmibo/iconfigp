@@ -26,7 +26,8 @@ summary('format library', format_library)
 
 sources = [
   'src/serialize.cpp',
-  'src/format.cpp'
+  'src/format.cpp',
+  'src/color.cpp',
 ]
 
 headers = [
