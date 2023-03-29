@@ -1,6 +1,7 @@
-#include "iconfigp/color.hpp"
+#include <iconfigp/color.hpp>
 #include <iconfigp/exception.hpp>
 #include <iconfigp/key-value.hpp>
+#include <iconfigp/path.hpp>
 #include <iconfigp/value-parser.hpp>
 
 #include <exception>
@@ -154,6 +155,8 @@ int main() { // NOLINT(*exception-escape)
   parse_value<iconfigp::rgba_f32>(" f0f",      iconfigp::rgba_f32{1., 0., 1., 1.});
   parse_value<iconfigp::rgba_f32>("#000000",   iconfigp::rgba_f32{0., 0., 0., 1.});
   parse_value<iconfigp::rgba_f32>("#00000000", iconfigp::rgba_f32{0., 0., 0., 0.});
+
+  parse_value<std::filesystem::path>("/root", "/root");
 
 
   // NOLINTEND(*-magic-numbers)
