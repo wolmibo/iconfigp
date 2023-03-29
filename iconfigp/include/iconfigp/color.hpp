@@ -19,7 +19,7 @@ using rgba_f32 = std::array<float, 4>;
 template<> struct value_parser<rgba_f32> {
   static constexpr std::string_view name{"color (rgba_f32)"};
 
-  static std::string format() {
+  static std::string_view format() {
     return "([#]rrggbb[aa] | [#]rgb[a]) // case insensitive";
   }
 
