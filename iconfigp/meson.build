@@ -31,16 +31,19 @@ sources = [
 ]
 
 headers = [
+  'include/iconfigp/color.hpp',
   'include/iconfigp/exception.hpp',
   'include/iconfigp/format.hpp',
   'include/iconfigp/group.hpp',
   'include/iconfigp/key-value.hpp',
   'include/iconfigp/located-string.hpp',
   'include/iconfigp/opt-ref.hpp',
+  'include/iconfigp/path.hpp',
   'include/iconfigp/parser.hpp',
   'include/iconfigp/reader.hpp',
   'include/iconfigp/section.hpp',
   'include/iconfigp/serialize.hpp',
+  'include/iconfigp/space.hpp',
   'include/iconfigp/value-parser.hpp',
 ]
 
