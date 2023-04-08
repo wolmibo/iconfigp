@@ -1,23 +1,11 @@
 #include "iconfigp/color.hpp"
+#include "iconfigp/space.hpp"
 
-#include <cctype>
 #include <limits>
 
 
 
 namespace {
-  void trim(std::string_view& str) {
-    while (!str.empty() && isspace(str.front()) != 0) {
-      str.remove_prefix(1);
-    }
-
-    while (!str.empty() && isspace(str.back()) != 0) {
-      str.remove_suffix(1);
-    }
-  }
-
-
-
   [[nodiscard]] iconfigp::rgba_f32 convert(const std::array<uint8_t, 4>& input) {
     auto range = static_cast<float>(std::numeric_limits<uint8_t>::max());
     return {
@@ -98,7 +86,7 @@ namespace {
 
 std::optional<iconfigp::rgba_f32>
 iconfigp::value_parser<iconfigp::rgba_f32>::parse(std::string_view input) {
-  trim(input);
+  input = trim(input);
 
   if (input.empty()) {
     return {};

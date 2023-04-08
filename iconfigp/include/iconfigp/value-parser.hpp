@@ -17,8 +17,6 @@
 #include <sstream>
 #include <string_view>
 
-#include <cctype>
-
 
 
 namespace iconfigp {

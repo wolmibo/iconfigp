@@ -1,13 +1,12 @@
 // Copyright (c) 2023 wolmibo
 // SPDX-License-Identifier: MIT
 
+#include "iconfigp/format.hpp"
 #include "iconfigp/section.hpp"
 #include "iconfigp/serialize.hpp"
-#include "iconfigp/format.hpp"
+#include "iconfigp/space.hpp"
 
 #include <algorithm>
-
-#include <cctype>
 
 
 
@@ -25,7 +24,7 @@ std::string iconfigp::serialize(std::string_view input, std::string_view illegal
     return {};
   }
 
-  if (isspace(input.front()) == 0 && isspace(input.back()) == 0 &&
+  if (!is_space(input.front()) && !is_space(input.back()) &&
       !contains_any_of(input, illegal)) {
     return std::string{input};
   }

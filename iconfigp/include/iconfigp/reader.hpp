@@ -6,11 +6,10 @@
 
 #include "iconfigp/exception.hpp"
 #include "iconfigp/located-string.hpp"
+#include "iconfigp/space.hpp"
 
 #include <string_view>
 #include <tuple>
-
-#include <cctype>
 
 
 
@@ -20,7 +19,7 @@ class reader {
   public:
     explicit reader(std::string_view source) :
       source_{source},
-      start_{source.data()}
+      start_ {source.data()}
     {}
 
 
@@ -50,7 +49,7 @@ class reader {
       while (!eof()) {
         if (peek() == '#') {
           skip_line();
-        } else if (isspace(peek()) != 0) {
+        } else if (is_space(peek())) {
           skip_whitespace();
         } else {
           break;
@@ -59,7 +58,7 @@ class reader {
     }
 
     void skip_whitespace() {
-      while (!eof() && isspace(peek()) != 0) {
+      while (!eof() && is_space(peek())) {
         skip();
       }
     }
@@ -106,7 +105,7 @@ class reader {
       if (peek() != '"' && peek() != '\'') {
         auto [content, end] = read_escaped_until_one_of(controls);
 
-        while (!content.empty() && isspace(content.back()) != 0) {
+        while (!content.empty() && is_space(content.back())) {
           content.pop_back();
         }
 
@@ -161,7 +160,7 @@ class reader {
 
 
     void skip_whitespace_within_line() {
-      while (!eof() && peek() != '\n' && isspace(peek()) != 0) {
+      while (!eof() && peek() != '\n' && is_space(peek())) {
         skip();
       }
     }
@@ -189,7 +188,7 @@ class reader {
 
       for (; !eof() && controls.find(peek()) == std::string_view::npos; skip()) {
         if (peek() != '\\') {
-          if (isspace(peek()) == 0) {
+          if (!is_space(peek())) {
             last_non_whitespace = offset();
           }
           content.push_back(peek());
