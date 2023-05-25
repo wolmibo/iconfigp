@@ -18,7 +18,7 @@ void iconfigp::clear_preferred_root_path() {
 
 
 void iconfigp::preferred_root_path(const std::filesystem::path& path) {
-  global_state::root_path = path;
+  global_state::root_path = std::filesystem::absolute(path);
 }
 
 
@@ -42,15 +42,17 @@ std::optional<std::filesystem::path> iconfigp::value_parser<std::filesystem::pat
     }
   }
 
-  if (input.starts_with('/')) {
-    return input;
+  std::filesystem::path path{input};
+
+  if (path.is_absolute()) {
+    return path;
   }
 
   if (auto root = preferred_root_path()) {
-    if (auto path = *root / input; std::filesystem::exists(path)) {
-      return path;
+    if (auto abs = *root / input; std::filesystem::exists(abs)) {
+      return abs;
     }
   }
 
-  return input;
+  return std::filesystem::absolute(path);
 }
