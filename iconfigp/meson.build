@@ -26,6 +26,7 @@ summary('format library', format_library)
 
 sources = [
   'src/color.cpp',
+  'src/find-config.cpp',
   'src/format.cpp',
   'src/path.cpp',
   'src/serialize.cpp',
