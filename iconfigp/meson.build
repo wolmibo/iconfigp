@@ -35,6 +35,7 @@ sources = [
 headers = [
   'include/iconfigp/color.hpp',
   'include/iconfigp/exception.hpp',
+  'include/iconfigp/find-config.hpp',
   'include/iconfigp/format.hpp',
   'include/iconfigp/group.hpp',
   'include/iconfigp/key-value.hpp',
