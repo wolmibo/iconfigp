@@ -1,6 +1,6 @@
 # iconfigp
 
-C++ parser library for an inlinable, INI-inspired configuration syntax with verbose
+C++ parser library for an INI-inspired [configuration syntax](doc/format.md) with verbose
 error messages.
 
 ## Example
