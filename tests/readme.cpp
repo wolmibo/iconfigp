@@ -24,6 +24,6 @@ int main() { // NOLINT(*exception-escape)
     assert(sec->unique_key("key"));
     assert(sec->unique_key("key")->value() == "value");
   } else {
-    throw std::runtime_error{"config has not [section]!"};
+    throw std::runtime_error{"config has no [section]!"};
   }
 }
