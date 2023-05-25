@@ -21,17 +21,15 @@ template<> struct value_parser<std::filesystem::path> {
     return "(<string> | ~<string>)";
   }
 
-  static std::optional<std::filesystem::path> parse(std::string_view input) {
-    if (input.starts_with("~")) {
-      if (auto* home = getenv("HOME")) {
-        input.remove_prefix(1);
-        return std::filesystem::path{home} / input;
-      }
-    }
-
-    return input;
-  };
+  static std::optional<std::filesystem::path> parse(std::string_view);
 };
+
+
+
+void clear_preferred_root_path();
+void preferred_root_path(const std::filesystem::path&);
+
+[[nodiscard]] std::optional<std::filesystem::path> preferred_root_path();
 
 }
 
