@@ -16,4 +16,6 @@ endif
 summary('examples', get_option('examples'))
 
 
-subdir('tests')
+if get_option('tests')
+  subdir('tests')
+endif
