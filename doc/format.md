@@ -52,6 +52,16 @@ All keys, values, and (sub)section names are strings subject to the follow rules
 * the escape sequence `\n` gets resolved as new line, while any other sequence `\<char>`
   gets resolved as `<char>`
 
+In particular, the following are equivalent:
+```ini
+number=10
+number = 10
+number = "10"
+number = \1\0
+number = "1\0"
+number = '10'
+```
+
 
 ## Built-In Value Types
 
