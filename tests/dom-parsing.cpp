@@ -79,14 +79,14 @@ int main() { // NOLINT(readability-function-cognitive-complexity)
     assert(root.subsection("e-DP1").value().subsection("panels").value().unique_key("size").value().value() == "0x0");
 
   } catch (const iconfigp::exception& ex) {
-    std::cout << iconfigp::format_exception(ex, example, true) << std::endl;
+    std::cout << iconfigp::format_exception(ex, example, true) << '\n' << std::flush;
   }
 
   std::string_view content{"[section] key1 = value1; key2 = value2; - key1 = value2; key2= value1 [section2]"};
   try {
     auto root = iconfigp::parser::parse(content);
   } catch (const iconfigp::exception& ex) {
-    std::cout << iconfigp::format_exception(ex, content, true) << std::endl;
+    std::cout << iconfigp::format_exception(ex, content, true) << '\n' << std::flush;
   }
 
 

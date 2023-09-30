@@ -40,7 +40,7 @@ void parse_value(std::string_view input, std::optional<T> correct) {
     }
   } catch (iconfigp::value_parse_exception& ex) {
     if (correct) {
-      std::cout << input << std::endl;
+      std::cout << input << '\n' << std::flush;
       throw;
     }
   }
