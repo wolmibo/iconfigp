@@ -55,7 +55,7 @@ namespace {
 
 
 
-  [[nodiscard]] std::string dim(std::string&& content, bool colored) {
+  [[nodiscard]] std::string dim(std::string content, bool colored) {
     if (!colored) {
       return content;
     }
@@ -64,7 +64,7 @@ namespace {
 
 
 
-  [[nodiscard]] std::string colorize(std::string&& content, bool colored, int color) {
+  [[nodiscard]] std::string colorize(std::string content, bool colored, int color) {
     if (!colored) {
       return content;
     }
@@ -73,7 +73,7 @@ namespace {
 
 
 
-  [[nodiscard]] std::string emphasize(std::string&& content, bool colored) {
+  [[nodiscard]] std::string emphasize(std::string content, bool colored) {
     if (!colored) {
       return content;
     }
