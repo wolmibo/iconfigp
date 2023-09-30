@@ -3,7 +3,6 @@
 
 #include "iconfigp/exception.hpp"
 #include "iconfigp/format.hpp"
-#include "iconfigp/located-string.hpp"
 #include "iconfigp/section.hpp"
 #include "iconfigp/serialize.hpp"
 

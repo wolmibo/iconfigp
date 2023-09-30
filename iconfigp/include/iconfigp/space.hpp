@@ -5,7 +5,6 @@
 #define ICONFIGP_SPACE_HPP_INCLUDED
 
 #include <algorithm>
-#include <string>
 #include <string_view>
 
 

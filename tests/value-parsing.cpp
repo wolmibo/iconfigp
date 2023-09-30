@@ -4,7 +4,6 @@
 #include <iconfigp/path.hpp>
 #include <iconfigp/value-parser.hpp>
 
-#include <exception>
 #include <sstream>
 #include <stdexcept>
 #include <iostream>

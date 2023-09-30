@@ -8,7 +8,6 @@
 #include "iconfigp/reader.hpp"
 #include "iconfigp/section.hpp"
 
-#include <optional>
 #include <string_view>
 #include <utility>
 
