@@ -213,9 +213,10 @@ template<value_parser_defined T>
     throw value_parse_exception{value, std::string{value_parser<T>::name},
       std::string{value_parser<T>::format()}, rex};
 
-  } catch (...) {}
-
-
+  } catch (...) {
+    throw value_parse_exception{value, std::string{value_parser<T>::name},
+      std::string{value_parser<T>::format()}};
+  }
 
   throw value_parse_exception{value, std::string{value_parser<T>::name},
     std::string{value_parser<T>::format()}};
