@@ -60,7 +60,7 @@ class value_parse_exception: public exception {
       public:
         range_exception(std::string message, size_t offset, size_t size = 0) :
           exception{iconfigp::format("cannot parse value range ({}:{}): {}",
-                    message, offset, size)},
+                    offset, size, message)},
           offset_  {offset},
           size_    {size},
           message_ {std::move(message)}
