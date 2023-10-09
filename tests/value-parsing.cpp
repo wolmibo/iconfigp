@@ -1,3 +1,4 @@
+#include <iconfigp/array.hpp>
 #include <iconfigp/color.hpp>
 #include <iconfigp/exception.hpp>
 #include <iconfigp/key-value.hpp>
@@ -12,6 +13,13 @@
 std::ostream& operator<<(std::ostream& out, const iconfigp::rgba_f32& me) {
   return out << '(' << me[0] << ", " << me[1] << ", "
     << me[2] << ", " << me[3] << ')';
+}
+
+std::ostream& operator<<(std::ostream& out, std::span<const float> me) {
+  for (const auto& item: me) {
+    out << item << ' ';
+  }
+  return out;
 }
 
 template<typename T>
@@ -39,6 +47,24 @@ void parse_value(std::string_view input, std::optional<T> correct) {
     }
   } catch (iconfigp::value_parse_exception& ex) {
     if (correct) {
+      std::cout << input << '\n' << std::flush;
+      throw;
+    }
+  }
+}
+
+template<size_t Size>
+void parse_array(std::string_view input, const std::vector<float>& correct) {
+  try {
+    auto result = iconfigp::parse_as_array<float, Size>(input);
+
+    if (!std::ranges::equal(correct, result)) {
+      std::cout << input << " was incorrectly parsed as "
+        << std::span{result}
+        << " instead of " << std::span{correct} << std::endl;
+    }
+  } catch (iconfigp::value_parse_exception::range_exception& ex) {
+    if (!correct.empty()) {
       std::cout << input << '\n' << std::flush;
       throw;
     }
@@ -156,6 +182,13 @@ int main() { // NOLINT(*exception-escape)
   parse_value<iconfigp::rgba_f32>("#00000000", iconfigp::rgba_f32{0., 0., 0., 0.});
 
   parse_value<std::filesystem::path>("/root", "/root");
+
+  parse_array<4>("1.0",                 {1.F, 1.F, 1.F, 1.F});
+  parse_array<4>("1.0,0.0",             {});
+  parse_array<4>("0.0,0.0,1.0,0.0",     {0.F, 0.F, 1.F, 0.F});
+  parse_array<4>("0.0,0.0,1.0,0.0,1.0", {});
+  parse_array<4>("0.0,0.0,1.0",         {});
+  parse_array<4>(",0.0,0.0,1.0",        {});
 
 
   // NOLINTEND(*-magic-numbers)
