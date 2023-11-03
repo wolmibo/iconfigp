@@ -49,9 +49,9 @@ int main() {
       std::cout << *msg << std::flush;
     }
 
-    std::cout << std::string(line_width, '-') << std::endl;
-    std::cout << iconfigp::serialize(root) << std::flush;
-    std::cout << std::string(line_width, '-') << std::endl;
+    std::cout << std::string(line_width, '-') << '\n';
+    std::cout << iconfigp::serialize(root);
+    std::cout << std::string(line_width, '-') << '\n' << std::flush;
 
 
     // query global outputs
