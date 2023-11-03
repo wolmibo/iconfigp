@@ -1,87 +1,105 @@
 // Copyright (c) 2023 wolmibo
 // SPDX-License-Identifier: MIT
 
-#include "iconfigp/exception.hpp"
 #include "iconfigp/format.hpp"
+
+#include "iconfigp/exception.hpp"
 #include "iconfigp/section.hpp"
 #include "iconfigp/serialize.hpp"
 
 #include <optional>
 #include <stdexcept>
-#include <tuple>
 
 #include <cstddef>
+
+using namespace iconfigp;
+
+
+
+
+
+text_line iconfigp::text_line_from_offset(std::string_view text, size_t offset) {
+  if (offset >= text.size()) {
+    throw std::out_of_range{"offset is outside of content"};
+  }
+
+  size_t row{0};
+
+  for (auto pos = text.find('\n'); pos != std::string_view::npos; pos = text.find('\n')) {
+    if (offset < pos) {
+      return {text.substr(0, pos), row, offset};
+    }
+
+    if (offset == pos) {
+      return {text.substr(0, pos), row, offset - 1};
+    }
+
+    text.remove_prefix(pos + 1);
+    offset -= pos + 1;
+    ++row;
+  }
+
+  return {text, row, offset};
+}
+
+
+
+
+
+std::optional<size_t> iconfigp::line_offset(
+    std::string_view text,
+    size_t           line
+) {
+  size_t offset{0};
+
+  for (; line > 0; line--) {
+    if (auto pos = text.find('\n'); pos != std::string_view::npos) {
+      pos++;
+
+      offset += pos;
+      text.remove_prefix(pos);
+    } else {
+      return {};
+    }
+  }
+
+  return offset;
+}
+
+
+
+
+
+[[nodiscard]] std::string iconfigp::dim(std::string content, bool colored) {
+  if (!colored) {
+    return content;
+  }
+  return "\x1b[2m" + content + "\x1b[0m";
+}
+
+
+
+[[nodiscard]] std::string iconfigp::colorize(std::string content, message_color color) {
+  if (color == message_color::none) {
+    return content;
+  }
+  return iconfigp::format("\x1b[1;{}m{}\x1b[0m", static_cast<int>(color), content);
+}
+
+
+
+[[nodiscard]] std::string iconfigp::emphasize(std::string content, bool colored) {
+  if (!colored) {
+    return content;
+  }
+  return "\x1b[1;37m" + content + "\x1b[0m";
+}
+
+
 
 
 
 namespace {
-  constexpr size_t line_width   = 90;
-  constexpr int    color_red    = 31;
-  constexpr int    color_yellow = 33;
-
-
-
-
-
-  [[nodiscard]] std::tuple<std::string_view, size_t, size_t> find_line(
-      std::string_view content,
-      size_t           offset
-  ) {
-    if (offset >= content.size()) {
-      throw std::out_of_range{"offset is outside of content"};
-    }
-
-    size_t line_number {1};
-
-    for (auto pos = content.find('\n'); pos != std::string_view::npos;
-        pos = content.find('\n')) {
-
-      if (offset < pos) {
-        return {content.substr(0, pos), line_number, offset};
-      }
-
-      if (offset == pos) {
-        return {content.substr(0, pos), line_number, offset - 1};
-      }
-
-      content.remove_prefix(pos + 1);
-      offset -= pos + 1;
-      ++line_number;
-    }
-    return {content, line_number, offset};
-  }
-
-
-
-
-
-  [[nodiscard]] std::string dim(std::string content, bool colored) {
-    if (!colored) {
-      return content;
-    }
-    return "\x1b[2m" + content + "\x1b[0m";
-  }
-
-
-
-  [[nodiscard]] std::string colorize(std::string content, bool colored, int color) {
-    if (!colored) {
-      return content;
-    }
-    return iconfigp::format("\x1b[1;{}m{}\x1b[0m", color, content);
-  }
-
-
-
-  [[nodiscard]] std::string emphasize(std::string content, bool colored) {
-    if (!colored) {
-      return content;
-    }
-    return "\x1b[1;37m" + content + "\x1b[0m";
-  }
-
-
-
   [[nodiscard]] std::string emphasize_range(
       std::string_view content,
       size_t           offset,
@@ -104,6 +122,9 @@ namespace {
 
 
 
+  constexpr size_t dot_size {3};
+  constexpr size_t min_size {dot_size * 2 + 1};
+
 
 
   [[nodiscard]] std::pair<std::string, size_t> center_offset(
@@ -111,8 +132,6 @@ namespace {
       size_t           offset,
       size_t           width
   ) {
-    static constexpr size_t dot_size {3};
-    static constexpr size_t min_size {dot_size * 2 + 1};
     static constexpr size_t rposition{5};
 
     if (width < min_size) {
@@ -149,45 +168,71 @@ namespace {
 
 
 
-  [[nodiscard]] std::string highlight_range(
-      std::string_view source,
-      size_t           offset,
-      size_t           count,
-      bool             colored,
-      int              color,
-      bool             show_line_number = true
+
+
+  [[nodiscard]] message_color select_color(bool colored, message_color color) {
+    return colored ? color : message_color::none;
+  }
+}
+
+
+
+
+
+std::string iconfigp::highlight_text_segment(
+    std::string_view content,
+    size_t           offset,
+    size_t           length,
+    message_color    color,
+    bool             line_number,
+    size_t           max_width
+) {
+  if (content.empty() || offset + length > content.size()) {
+    return fallback_range(offset, length);
+  }
+
+  auto line = text_line_from_offset(content, std::min(offset, content.size() - 1));
+
+  auto prefix      = line_number ? format("  {} | ", line.row + 1) : "  ";
+  auto prefix_size = prefix.size();
+
+  max_width = (prefix_size >= max_width + min_size) ?
+                 min_size : max_width - prefix_size;
+
+  length = std::min(length, line.content.size());
+
+  auto [print, col] = center_offset(line.content, line.column, max_width);
+
+  if (length + col > max_width) {
+    length = 0;
+  }
+
+  return iconfigp::format("{}{}\n{}{}\n",
+      dim(std::move(prefix), is_color(color)),
+      emphasize_range(print, col, length, is_color(color)),
+      std::string(prefix_size + col, ' '),
+      colorize(std::string(std::max<size_t>(length, 1), '^'), color)
+  );
+}
+
+
+
+
+
+
+
+namespace {
+  [[nodiscard]] std::string format_range(
+    const value_parse_exception::range_exception& ex,
+    std::string_view                              source,
+    bool                                          colored,
+    size_t                                        max_width,
+    bool                                          show_line_number = true
   ) {
-    if (source.empty() || offset + count > source.size()) {
-      return fallback_range(offset, count);
-    }
-
-    if (offset == source.size()) {
-      offset--;
-    }
-
-    auto [whole_line, line_number, column] = find_line(source, offset);
-    if (count > whole_line.size()) {
-      count = 0;
-    }
-
-    auto line_prefix      = show_line_number
-                              ? iconfigp::format("  {} | ", line_number) : "  ";
-    auto line_prefix_size = line_prefix.size();
-
-    auto rem_width = line_width - line_prefix_size;
-
-    auto [line, col] = center_offset(whole_line, column, rem_width);
-
-    if (col + count > rem_width) {
-      count = 0;
-    }
-
-    return iconfigp::format("{}{}\n{}{}\n",
-        dim(std::move(line_prefix), colored),
-        emphasize_range(line, col, count, colored),
-
-        std::string(line_prefix_size + col, ' '),
-        colorize(std::string(std::max<size_t>(count, 1), '^'), colored, color)
+    return iconfigp::format("{}:\n{}",
+        ex.message(),
+        highlight_text_segment(source, ex.offset(), ex.size(),
+          select_color(colored, message_color::error), show_line_number, max_width)
     );
   }
 
@@ -196,39 +241,27 @@ namespace {
 
 
   [[nodiscard]] std::string format_missing_key(
-    const iconfigp::missing_key_exception& ex,
-    std::string_view                       source,
-    bool                                   colored
+    const missing_key_exception& ex,
+    std::string_view             source,
+    bool                         colored,
+    size_t                       max_width
   ) {
     return iconfigp::format("The required key {} is missing in this group:\n{}",
         emphasize(iconfigp::serialize(ex.key()), colored),
-        highlight_range(source, ex.offset(), 0, colored, color_red)
+        highlight_text_segment(source, ex.offset(), 0,
+          select_color(colored, message_color::error), true, max_width)
     );
   }
 
 
-
-
-
-  [[nodiscard]] std::string format_range(
-    const iconfigp::value_parse_exception::range_exception& ex,
-    std::string_view                                        source,
-    bool                                                    colored,
-    bool                                                    show_line_number = true
-  ) {
-    return iconfigp::format("{}:\n{}",
-        ex.message(),
-        highlight_range(source, ex.offset(), ex.size(),
-          colored, color_red, show_line_number)
-    );
-  }
 
 
 
   [[nodiscard]] std::string format_value_parse(
-    const iconfigp::value_parse_exception& ex,
-    std::string_view                       source,
-    bool                                   colored
+    const value_parse_exception& ex,
+    std::string_view             source,
+    bool                         colored,
+    size_t                       max_width
   ) {
     return iconfigp::format("{} cannot be parsed as {}:\n{}{}"
         "A value of type {} has the following form:\n{}\n",
@@ -237,11 +270,12 @@ namespace {
 
         emphasize(iconfigp::serialize(ex.target()), colored),
 
-        highlight_range(source, ex.value().value_offset(),
-          ex.value().value_size(), colored, color_red),
+        highlight_text_segment(source, ex.value().value_offset(), ex.value().value_size(),
+          select_color(colored, message_color::error), true, max_width),
 
         ex.range_ex()
-          ? (format_range(*ex.range_ex(), ex.value().value(), colored, false)) : "",
+          ? (format_range(*ex.range_ex(), ex.value().value(), colored, max_width, false))
+          : "",
 
         iconfigp::serialize(ex.target()),
         ex.format()
@@ -253,19 +287,26 @@ namespace {
 
 
   [[nodiscard]] std::string format_multiple_definitions(
-    const iconfigp::multiple_definitions_exception& ex,
-    std::string_view                                source,
-    bool                                            colored
+    const multiple_definitions_exception& ex,
+    std::string_view                      source,
+    bool                                  colored,
+    size_t                                max_width
   ) {
     return iconfigp::format("The key {} is only allowed once per {}:\n{}"
         "Previous definition:\n{}{}",
 
         emphasize(iconfigp::serialize(ex.definition1().key()), colored),
+
         ex.per_section() ? "section" : "group",
-        highlight_range(source, ex.definition2().key_offset(),
-          ex.definition2().key_size(), colored, color_red),
-        highlight_range(source, ex.definition1().key_offset(),
-          ex.definition1().key_size(), colored, color_yellow),
+
+        highlight_text_segment(source, ex.definition2().key_offset(),
+          ex.definition2().key_size(),
+          select_color(colored, message_color::error), true, max_width),
+
+        highlight_text_segment(source, ex.definition1().key_offset(),
+          ex.definition1().key_size(),
+          select_color(colored, message_color::warning), true, max_width),
+
         ex.per_section() ? "" : "Preceed the key with - to start a new group.\n"
     );
   }
@@ -318,9 +359,7 @@ namespace {
 
 
 
-  [[nodiscard]] std::optional<std::string_view> error_type_hint(
-      iconfigp::syntax_error_type type
-  ) {
+  [[nodiscard]] std::optional<std::string_view> error_type_hint(syntax_error_type type) {
     using enum iconfigp::syntax_error_type;
 
     switch (type) {
@@ -357,13 +396,17 @@ namespace {
   [[nodiscard]] std::string format_syntax(
     const iconfigp::syntax_exception& ex,
     std::string_view                  source,
-    bool                              colored
+    bool                              colored,
+    size_t                            max_width
   ) {
     return iconfigp::format("{} while parsing {}:\n{}{}",
         error_type_to_string(ex.type()),
+
         task_type_to_string(ex.task()),
-        highlight_range(source, ex.offset(), error_type_character_count(ex.type()),
-          colored, color_red),
+
+        highlight_text_segment(source, ex.offset(), error_type_character_count(ex.type()),
+          select_color(colored, message_color::error), true, max_width),
+
         error_type_hint(ex.type()).value_or("")
     );
   }
@@ -376,27 +419,28 @@ namespace {
 std::string iconfigp::format_exception(
   const exception& ex,
   std::string_view source,
-  bool             colored
+  bool             colored,
+  size_t           max_width
 ) {
   if (const auto* missing = dynamic_cast<const missing_key_exception*>(&ex)) {
-    return format_missing_key(*missing, source, colored);
+    return format_missing_key(*missing, source, colored, max_width);
   }
 
   if (const auto* parse = dynamic_cast<const value_parse_exception*>(&ex)) {
-    return format_value_parse(*parse, source, colored);
+    return format_value_parse(*parse, source, colored, max_width);
   }
 
   if (const auto* multi = dynamic_cast<const multiple_definitions_exception*>(&ex)) {
-    return format_multiple_definitions(*multi, source, colored);
+    return format_multiple_definitions(*multi, source, colored, max_width);
   }
 
   if (const auto* syntax = dynamic_cast<const syntax_exception*>(&ex)) {
-    return format_syntax(*syntax, source, colored);
+    return format_syntax(*syntax, source, colored, max_width);
   }
 
   if (const auto* range =
       dynamic_cast<const value_parse_exception::range_exception*>(&ex)) {
-    return format_range(*range, source, colored);
+    return format_range(*range, source, colored, max_width);
   }
 
   return ex.what();
@@ -406,25 +450,40 @@ std::string iconfigp::format_exception(
 
 
 
-std::optional<std::string> iconfigp::generate_unused_message(
+namespace {
+  [[nodiscard]] std::string_view select_number(
+      size_t           count,
+      std::string_view singular,
+      std::string_view plural
+  ) {
+    return count == 1 ? singular : plural;
+  }
+}
+
+
+
+
+
+std::optional<std::string> iconfigp::format_unused_message(
     const section&   sec,
     std::string_view source,
-    bool             colored
+    bool             colored,
+    size_t           max_width
 ) {
   std::string output;
 
   auto unused_sections = sec.unused_sections();
   if (!unused_sections.empty()) {
-    if (unused_sections.size() > 1) {
-      output += "The following sections (and their key(s)) have not been used:\n";
-    } else {
-      output += "The following section (and its key(s)) has not been used:\n";
-    }
+    output += select_number(unused_sections.size(),
+                "The following section (and its key(s)) has not been used:\n",
+                "The following sections (and their key(s)) have not been used:\n");
+
     for (const auto* un_sec: unused_sections) {
       if (source.empty()) {
         output += iconfigp::format("  {}\n", un_sec->name());
       } else {
-        output += highlight_range(source, un_sec->offset(), 0, colored, color_yellow);
+        output += highlight_text_segment(source, un_sec->offset(), 0,
+            select_color(colored, message_color::warning), true, max_width);
       }
     }
   }
@@ -433,17 +492,16 @@ std::optional<std::string> iconfigp::generate_unused_message(
 
   auto unused_keys = sec.unused_keys();
   if (!unused_keys.empty()) {
-    if (unused_keys.size() > 1) {
-      output += "The following keys have not been used:\n";
-    } else {
-      output += "The following key has not been used:\n";
-    }
+    output += select_number(unused_keys.size(),
+                "The following key has not been used:\n",
+                "The following keys have not been used:\n");
+
     for (const auto* un_key: unused_keys) {
       if (source.empty()) {
         output += iconfigp::format("  {}\n", un_key->key());
       } else {
-        output += highlight_range(source,
-            un_key->key_offset(), un_key->key_size(), colored, color_yellow);
+        output += highlight_text_segment(source, un_key->key_offset(), un_key->key_size(),
+            select_color(colored, message_color::warning), true, max_width);
       }
     }
   }
@@ -454,11 +512,10 @@ std::optional<std::string> iconfigp::generate_unused_message(
     return {};
   }
 
-  std::string pron = (unused_sections.size() + unused_keys.size() > 1)
-                       ? "them" : "it";
-
-  output += "Make sure you have spelled " + pron + " correctly.\n"
-    "Alternatively, you can use # to comment out unneeded keys.\n";
+  output += "Make sure you have spelled ";
+  output += select_number(unused_sections.size() + unused_keys.size(), "it", "them");
+  output += " correctly.\n"
+            "Alternatively, you can use # to comment out unneeded keys.\n";
 
   return output;
 }

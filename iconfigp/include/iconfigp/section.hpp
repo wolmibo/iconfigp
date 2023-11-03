@@ -232,11 +232,6 @@ class section {
 
 };
 
-
-
-[[nodiscard]] std::optional<std::string> generate_unused_message(const section&,
-    std::string_view source = "", bool colored = false);
-
 }
 
 #endif // ICONFIGP_SECTION_HPP_INCLUDED

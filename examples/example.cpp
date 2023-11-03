@@ -1,7 +1,8 @@
-#include <iconfigp/serialize.hpp>
 #include <iconfigp/exception.hpp>
-#include <iconfigp/section.hpp>
+#include <iconfigp/format.hpp>
 #include <iconfigp/parser.hpp>
+#include <iconfigp/section.hpp>
+#include <iconfigp/serialize.hpp>
 
 #include <iostream>
 
@@ -44,7 +45,7 @@ int main() {
     //
     assert(root.unique_key("fade-out-ms").value().value() == "250");
 
-    if (auto msg = iconfigp::generate_unused_message(root, example, true)) {
+    if (auto msg = iconfigp::format_unused_message(root, example, true)) {
       std::cout << *msg << std::flush;
     }
 

@@ -23,11 +23,6 @@ class exception : public std::runtime_error {
 
 
 
-[[nodiscard]] std::string format_exception(const exception&,
-    std::string_view source = "", bool colored = false);
-
-
-
 
 
 class missing_key_exception: public exception {
