@@ -12,3 +12,6 @@ test('serialize',
 
 test('readme',
   executable('readme', 'readme.cpp', dependencies: iconfigp_dep))
+
+test('formatting',
+  executable('formatting', 'format.cpp', dependencies: iconfigp_dep))
