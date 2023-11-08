@@ -25,23 +25,32 @@ namespace iconfigp {
 template<typename T>
 struct value_parser {};
 
-
-
-template<>
-struct value_parser<std::string_view> {
-  static constexpr std::string_view name{"string"};
-
-  static std::string format() {
-    return "[string] // case sensitive";
-  }
-
-  static std::optional<std::string_view> parse(std::string_view input) {
-    return input;
-  }
-};
+}
 
 
 
+//NOLINTNEXTLINE(*-macro-usage)
+#define ICONFIGP_DEFINE_VALUE_PARSER_NAMED(type, nm, fmt, function)      \
+  template<> struct iconfigp::value_parser<type> {                       \
+    static constexpr std::string_view name     { nm };                   \
+    static constexpr std::string      format() { return fmt; }           \
+    static std::optional<type> parse(std::string_view source) {          \
+      return function(source);                                           \
+    }                                                                    \
+  };
+
+//NOLINTNEXTLINE(*-macro-usage)
+#define ICONFIGP_DEFINE_VALUE_PARSER(type, format, function) \
+  ICONFIGP_DEFINE_VALUE_PARSER_NAMED(type, #type, format, function)
+
+
+ICONFIGP_DEFINE_VALUE_PARSER_NAMED(std::string_view, "string",
+    "[string] // case sensitive",
+    [](std::string_view source) { return source; })
+
+
+
+namespace iconfigp {
 
 
 template<typename T>
@@ -134,26 +143,77 @@ struct value_parser<T> {
 template<typename T>
 struct case_insensitive_parse_lut {};
 
-template<>
-struct case_insensitive_parse_lut<bool> {
-  static constexpr std::string_view name{"bool"};
 
-  static constexpr std::array<std::pair<std::string_view, bool>, 10> lut {
-    std::make_pair("true",  true),
-    std::make_pair("t",     true),
-    std::make_pair("yes",   true),
-    std::make_pair("y",     true),
-    std::make_pair("1",     true),
 
-    std::make_pair("false", false),
-    std::make_pair("f",     false),
-    std::make_pair("no",    false),
-    std::make_pair("n",     false),
-    std::make_pair("0",     false),
+namespace details {
+  template<typename T, typename V>
+    requires (!std::is_same_v<T, std::string_view>)
+  [[nodiscard]] constexpr std::pair<std::string_view, T> to_lut_pair(V&& value) {
+    if constexpr (std::is_same_v<V, T>) {
+      return std::pair<std::string_view, T>({}, std::forward<T>(value));
+    } else {
+      //NOLINTNEXTLINE(*-array-to-pointer-decay)
+      return std::pair<std::string_view, T>(value, {});
+    }
+  }
+}
+
+
+
+template<typename T, typename ...Args>
+[[nodiscard]] constexpr auto create_lut(std::string_view k1, T&& v1, Args&& ...args) {
+  std::array<std::pair<std::string_view, T>, sizeof...(args)> buffer {
+    details::to_lut_pair<T, Args>(std::forward<Args>(args))...
   };
-};
+
+  std::array<std::pair<std::string_view, T>, sizeof...(args) / 2 + 1> output;
+  auto it = output.begin();
+
+  *it++ = std::pair<std::string_view, T>(k1, std::forward<T>(v1));
+
+  //NOLINTBEGIN(*-pointer-arithmetic)
+  for (auto jt = buffer.begin(); it < output.end() && jt < buffer.end(); it++, jt += 2) {
+    *it = std::pair<std::string_view, T>(jt->first, (jt + 1)->second);
+  }
+  //NOLINTEND(*-pointer-arithmetic)
+
+  return output;
+}
+}
 
 
+//NOLINTNEXTLINE(*-macro-usage)
+#define ICONFIGP_DEFINE_CI_LUT_NAMED(type, nm, ...)              \
+  template<> struct iconfigp::case_insensitive_parse_lut<type> { \
+    static constexpr std::string_view name { nm };               \
+    static constexpr auto lut = create_lut<type>(__VA_ARGS__);   \
+  };
+
+//NOLINTNEXTLINE(*-macro-usage)
+#define ICONFIGP_DEFINE_CI_LUT(type, ...) \
+  ICONFIGP_DEFINE_CI_LUT_NAMED(type, #type, __VA_ARGS__)
+
+//NOLINTNEXTLINE(*-macro-usage)
+#define ICONFIGP_DEFINE_ENUM_LUT_NAMED(type, nm, ...)            \
+  template<> struct iconfigp::case_insensitive_parse_lut<type> { \
+    using enum type;                                             \
+    static constexpr std::string_view name { nm };               \
+    static constexpr auto lut = create_lut<type>(__VA_ARGS__);   \
+  };
+
+//NOLINTNEXTLINE(*-macro-usage)
+#define ICONFIGP_DEFINE_ENUM_LUT(type, ...) \
+  ICONFIGP_DEFINE_ENUM_LUT_NAMED(type, #type, __VA_ARGS__)
+
+
+
+ICONFIGP_DEFINE_CI_LUT(bool,
+    "true",  true,  "t", true,  "yes", true,  "y", true,  "1", true,
+    "false", false, "f", false, "no",  false, "n", false, "0", false)
+
+
+
+namespace iconfigp {
 
 template<typename T> requires (!case_insensitive_parse_lut<T>::name.empty())
 struct value_parser<T> {

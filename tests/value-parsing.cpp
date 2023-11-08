@@ -8,7 +8,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <iostream>
-#include <array>
 
 std::ostream& operator<<(std::ostream& out, const iconfigp::rgba_f32& me) {
   return out << '(' << me[0] << ", " << me[1] << ", "
@@ -82,14 +81,10 @@ std::ostream& operator<<(std::ostream& out, my_enum me) {
 }
 
 
-template<>
-struct iconfigp::case_insensitive_parse_lut<my_enum> {
-  static constexpr std::string_view name {"my_enum"};
-  static constexpr std::array<std::pair<std::string_view, my_enum>, 2> lut = {
-    std::make_pair("foo", my_enum::foo),
-    std::make_pair("bar", my_enum::bar)
-  };
-};
+ICONFIGP_DEFINE_ENUM_LUT(my_enum,
+    "foo", foo,
+    "bar", bar
+)
 
 
 
