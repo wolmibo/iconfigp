@@ -54,9 +54,10 @@ class section {
       used_ = true;
 
       auto it = std::ranges::find_if(sections_,
-          [name](const auto& sect) { return sect.name() == name; });
+          [name](const auto& sect) { return sect.name_ == name; });
 
       if (it != sections_.end()) {
+        it->used_ = true;
         return *it;
       }
       return {};
