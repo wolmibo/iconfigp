@@ -40,6 +40,9 @@ std::optional<std::filesystem::path> iconfigp::value_parser<std::filesystem::pat
     //NOLINTNEXTLINE(*-mt-unsafe)
     if (auto* home = getenv("HOME")) {
       input.remove_prefix(1);
+      if (input.starts_with('/')) {
+        input.remove_prefix(1);
+      }
       return std::filesystem::path{home} / input;
     }
   }
