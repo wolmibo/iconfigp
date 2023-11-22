@@ -33,6 +33,7 @@ sources = [
 ]
 
 headers = [
+  'include/iconfigp/array.hpp',
   'include/iconfigp/color.hpp',
   'include/iconfigp/exception.hpp',
   'include/iconfigp/find-config.hpp',
