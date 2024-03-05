@@ -5,9 +5,10 @@
 #include <iconfigp/path.hpp>
 #include <iconfigp/value-parser.hpp>
 
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <iostream>
+#include <vector>
 
 std::ostream& operator<<(std::ostream& out, const iconfigp::rgba_f32& me) {
   return out << '(' << me[0] << ", " << me[1] << ", "
