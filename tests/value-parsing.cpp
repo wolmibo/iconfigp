@@ -6,6 +6,7 @@
 #include <iconfigp/value-parser.hpp>
 
 #include <iostream>
+#include <span>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -133,7 +134,9 @@ int main() { // NOLINT(*exception-escape)
 
   parse_value<float>("foo", {});
   parse_value<float>("5f",  {});
+#if !defined(_LIBCPP_VERSION)
   parse_value<float>("+5",  {});
+#endif
 
   parse_value<int8_t>  ("0", 0);
   parse_value<uint8_t> ("0", 0);

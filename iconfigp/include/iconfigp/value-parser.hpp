@@ -57,11 +57,22 @@ template<typename T>
 struct floating_point {};
 
 template<>
-struct floating_point<float>       { static constexpr std::string_view name{"f32"};  };
+struct floating_point<float> {
+  static constexpr std::string_view name{"f32"};
+  static constexpr float(*sto)(const std::string&, size_t*) = &std::stof;
+};
+
 template<>
-struct floating_point<double>      { static constexpr std::string_view name{"f64"};  };
+struct floating_point<double> {
+  static constexpr std::string_view name{"f64"};
+  static constexpr double(*sto)(const std::string&, size_t*) = &std::stod;
+};
+
 template<>
-struct floating_point<long double> { static constexpr std::string_view name{"f128"}; };
+struct floating_point<long double> {
+  static constexpr std::string_view name{"f128"};
+  static constexpr long double(*sto)(const std::string&, size_t*) = &std::stold;
+};
 
 
 
@@ -76,11 +87,23 @@ struct value_parser<T> {
 
 
   static std::optional<T> parse(std::string_view input) {
+#if defined(_LIBCPP_VERSION)
+    try {
+      size_t processed{0};
+      T output = floating_point<T>::sto(std::string{input}, &processed);
+      if (processed == input.size()) {
+        return output;
+      }
+    } catch (...) {
+      return {};
+    }
+#else
     T output{};
     const auto *end = input.data() + input.size();
     if (std::from_chars(input.data(), end, output).ptr == end) {
       return output;
     }
+#endif
 
     return {};
   }
