@@ -13,6 +13,3 @@ Checks: >
     -performance-enum-size,
   readability-*,
     -readability-identifier-length
-
-
-UseColor: true
