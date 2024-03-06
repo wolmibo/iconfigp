@@ -5,9 +5,18 @@
 #define ICONFIGP_FORMAT_HPP_INCLUDED
 
 #include <version>
-#include <chrono> // FIXME: to get __cpp_lib_format without compilation error pre GCC13
 
-#if defined(__cpp_lib_format)
+#if !defined(__cpp_lib_format) && !defined(_LIBCPP_VERSION) && __GNUC__ < 13
+#include <chrono> // FIXME: to get __cpp_lib_format without compilation error pre GCC13
+#endif
+
+#if defined(__cpp_lib_format) || (_LIBCPP_VERSION >= 170001 && _LIBCPP_STD_VER >= 20)
+#define STD_FORMAT
+#endif
+
+
+
+#if defined(STD_FORMAT)
 #include <format>
 #else
 #include <fmt/core.h>
@@ -18,7 +27,7 @@
 namespace iconfigp {
 
 namespace impl {
-#if defined(__cpp_lib_format)
+#if defined(STD_FORMAT)
   namespace format = std;
 #else
   namespace format = fmt;
