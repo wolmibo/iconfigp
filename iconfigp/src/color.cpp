@@ -1,6 +1,7 @@
 #include "iconfigp/color.hpp"
 #include "iconfigp/space.hpp"
 
+#include <cstdint>
 #include <limits>
 
 
