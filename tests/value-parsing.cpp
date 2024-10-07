@@ -38,7 +38,7 @@ namespace {
   }
 
   template<typename T>
-  void parse_value(std::string_view input, std::optional<T> correct) {
+  void parse_value(std::string_view input, const std::optional<T>& correct) {
     iconfigp::key_value kv{iconfigp::located_string{"foo"}, iconfigp::located_string{std::string{input}}};
 
     try {
