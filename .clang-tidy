@@ -12,4 +12,5 @@ Checks: >
   performance-*,
     -performance-enum-size,
   readability-*,
-    -readability-identifier-length
+    -readability-identifier-length,
+    -readability-math-missing-parentheses
