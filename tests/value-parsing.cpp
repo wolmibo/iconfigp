@@ -11,75 +11,79 @@
 #include <stdexcept>
 #include <vector>
 
-std::ostream& operator<<(std::ostream& out, const iconfigp::rgba_f32& me) {
-  return out << '(' << me[0] << ", " << me[1] << ", "
-    << me[2] << ", " << me[3] << ')';
-}
 
-std::ostream& operator<<(std::ostream& out, std::span<const float> me) {
-  for (const auto& item: me) {
-    out << item << ' ';
+
+namespace {
+  std::ostream& operator<<(std::ostream& out, const iconfigp::rgba_f32& me) {
+    return out << '(' << me[0] << ", " << me[1] << ", "
+      << me[2] << ", " << me[3] << ')';
   }
-  return out;
-}
 
-template<typename T>
-std::string to_string(std::optional<T> value) {
-  std::stringstream out;
-  if (value) {
-    out << *value;
-  } else {
-    out << "{}";
+  std::ostream& operator<<(std::ostream& out, std::span<const float> me) {
+    for (const auto& item: me) {
+      out << item << ' ';
+    }
+    return out;
   }
-  return out.str();
-}
 
-template<typename T>
-void parse_value(std::string_view input, std::optional<T> correct) {
-  iconfigp::key_value kv{iconfigp::located_string{"foo"}, iconfigp::located_string{std::string{input}}};
-
-  try {
-    auto value = iconfigp::parse<T>(kv);
-    if (value != correct) {
-      std::cout << input << " was incorrectly parsed as "
-        << value
-        << " instead of " << to_string(correct) << std::endl;
-      throw std::runtime_error{"incorrectly parsed"};
+  template<typename T>
+  std::string to_string(std::optional<T> value) {
+    std::stringstream out;
+    if (value) {
+      out << *value;
+    } else {
+      out << "{}";
     }
-  } catch (iconfigp::value_parse_exception& ex) {
-    if (correct) {
-      std::cout << input << '\n' << std::flush;
-      throw;
-    }
+    return out.str();
   }
-}
 
-template<size_t Size>
-void parse_array(std::string_view input, const std::vector<float>& correct) {
-  try {
-    auto result = iconfigp::parse_as_array<float, Size>(input);
+  template<typename T>
+  void parse_value(std::string_view input, std::optional<T> correct) {
+    iconfigp::key_value kv{iconfigp::located_string{"foo"}, iconfigp::located_string{std::string{input}}};
 
-    if (!std::ranges::equal(correct, result)) {
-      std::cout << input << " was incorrectly parsed as "
-        << std::span{result}
-        << " instead of " << std::span{correct} << std::endl;
-    }
-  } catch (iconfigp::value_parse_exception::range_exception& ex) {
-    if (!correct.empty()) {
-      std::cout << input << '\n' << std::flush;
-      throw;
+    try {
+      auto value = iconfigp::parse<T>(kv);
+      if (value != correct) {
+        std::cout << input << " was incorrectly parsed as "
+          << value
+          << " instead of " << to_string(correct) << std::endl;
+        throw std::runtime_error{"incorrectly parsed"};
+      }
+    } catch (iconfigp::value_parse_exception& ex) {
+      if (correct) {
+        std::cout << input << '\n' << std::flush;
+        throw;
+      }
     }
   }
-}
+
+  template<size_t Size>
+  void parse_array(std::string_view input, const std::vector<float>& correct) {
+    try {
+      auto result = iconfigp::parse_as_array<float, Size>(input);
+
+      if (!std::ranges::equal(correct, result)) {
+        std::cout << input << " was incorrectly parsed as "
+          << std::span{result}
+          << " instead of " << std::span{correct} << std::endl;
+      }
+    } catch (iconfigp::value_parse_exception::range_exception& ex) {
+      if (!correct.empty()) {
+        std::cout << input << '\n' << std::flush;
+        throw;
+      }
+    }
+  }
 
 
-enum class my_enum {
-  foo,
-  bar
-};
+  enum class my_enum {
+    foo,
+    bar
+  };
 
-std::ostream& operator<<(std::ostream& out, my_enum me) {
-  return out << static_cast<int>(me);
+  std::ostream& operator<<(std::ostream& out, my_enum me) {
+    return out << static_cast<int>(me);
+  }
 }
 
 

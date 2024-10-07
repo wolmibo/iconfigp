@@ -7,51 +7,53 @@
 #include <string>
 
 
-[[nodiscard]] std::string to_string(const iconfigp::located_string& ls) {
-  return std::to_string(ls.offset()) + ":" + std::to_string(ls.size())
-    + ":%" + std::string{ls.content()} + "%";
-}
-
-
-
-void print_exception(const iconfigp::syntax_exception& ex, std::string_view input) {
-  std::cout << iconfigp::format_exception(ex, input, false) << std::flush;
-}
-
-
-
-void test(const std::string& input, const iconfigp::located_string& correct) {
-  iconfigp::reader read{input};
-
-  try {
-    auto parsed = read.read_until_one_of(",;#\n");
-
-    if (parsed != correct) {
-      throw std::runtime_error{
-        "test failed: %" + input + "% was parsed as " + to_string(parsed)
-          + " instead of " + to_string(correct)
-      };
-    }
-
-  } catch (iconfigp::syntax_exception& ex) {
-    print_exception(ex, input);
-    throw std::runtime_error{"unable to parse"};
+namespace {
+  [[nodiscard]] std::string to_string(const iconfigp::located_string& ls) {
+    return std::to_string(ls.offset()) + ":" + std::to_string(ls.size())
+      + ":%" + std::string{ls.content()} + "%";
   }
-}
 
 
 
-void test_exception(const std::string& input, const iconfigp::syntax_exception& ex1) {
-  try {
+  void print_exception(const iconfigp::syntax_exception& ex, std::string_view input) {
+    std::cout << iconfigp::format_exception(ex, input, false) << std::flush;
+  }
+
+
+
+  void test(const std::string& input, const iconfigp::located_string& correct) {
     iconfigp::reader read{input};
-    auto parsed = read.read_until_one_of(",;#\n");
-  } catch (iconfigp::syntax_exception& ex2) {
-    if (ex1.type() == ex2.type() && ex1.offset() == ex2.offset()) {
-      return;
+
+    try {
+      auto parsed = read.read_until_one_of(",;#\n");
+
+      if (parsed != correct) {
+        throw std::runtime_error{
+          "test failed: %" + input + "% was parsed as " + to_string(parsed)
+            + " instead of " + to_string(correct)
+        };
+      }
+
+    } catch (iconfigp::syntax_exception& ex) {
+      print_exception(ex, input);
+      throw std::runtime_error{"unable to parse"};
     }
-    print_exception(ex2, input);
   }
-  throw std::runtime_error{"failed to get correct exception"};
+
+
+
+  void test_exception(const std::string& input, const iconfigp::syntax_exception& ex1) {
+    try {
+      iconfigp::reader read{input};
+      auto parsed = read.read_until_one_of(",;#\n");
+    } catch (iconfigp::syntax_exception& ex2) {
+      if (ex1.type() == ex2.type() && ex1.offset() == ex2.offset()) {
+        return;
+      }
+      print_exception(ex2, input);
+    }
+    throw std::runtime_error{"failed to get correct exception"};
+  }
 }
 
 

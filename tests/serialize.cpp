@@ -35,13 +35,15 @@ dither= 0
 )";
 
 
-template<typename...Args>
-void test(std::string_view correct, Args&&...args) {
-  if (auto result = iconfigp::serialize(std::forward<Args>(args)...);
-      result != correct) {
+namespace {
+  template<typename...Args>
+  void test(std::string_view correct, Args&&...args) {
+    if (auto result = iconfigp::serialize(std::forward<Args>(args)...);
+        result != correct) {
 
-    throw std::runtime_error{"%" + std::string{correct}
-      + "% was incorrectly serialized as %" + result + "%"};
+      throw std::runtime_error{"%" + std::string{correct}
+        + "% was incorrectly serialized as %" + result + "%"};
+    }
   }
 }
 
