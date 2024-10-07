@@ -27,11 +27,19 @@ text_line iconfigp::text_line_from_offset(std::string_view text, size_t offset) 
 
   for (auto pos = text.find('\n'); pos != std::string_view::npos; pos = text.find('\n')) {
     if (offset < pos) {
-      return {text.substr(0, pos), row, offset};
+      return {
+        .content = text.substr(0, pos),
+        .row     = row,
+        .column  = offset
+      };
     }
 
     if (offset == pos) {
-      return {text.substr(0, pos), row, offset - 1};
+      return {
+        .content = text.substr(0, pos),
+        .row     = row,
+        .column  = offset - 1
+      };
     }
 
     text.remove_prefix(pos + 1);
@@ -39,7 +47,11 @@ text_line iconfigp::text_line_from_offset(std::string_view text, size_t offset) 
     ++row;
   }
 
-  return {text, row, offset};
+  return {
+    .content = text,
+    .row     = row,
+    .column  = offset
+  };
 }
 
 
