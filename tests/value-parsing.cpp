@@ -30,7 +30,11 @@ namespace {
   std::string to_string(std::optional<T> value) {
     std::stringstream out;
     if (value) {
-      out << *value;
+      if constexpr (std::is_same_v<T, signed char> || std::is_same_v<T, unsigned char>) {
+        out << static_cast<int>(*value);
+      } else {
+        out << *value;
+      }
     } else {
       out << "{}";
     }
