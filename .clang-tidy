@@ -13,4 +13,5 @@ Checks: >
     -performance-enum-size,
   readability-*,
     -readability-identifier-length,
+    -readability-use-concise-preprocessor-directives,
     -readability-math-missing-parentheses
