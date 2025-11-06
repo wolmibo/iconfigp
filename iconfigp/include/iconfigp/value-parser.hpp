@@ -100,6 +100,7 @@ struct value_parser<T> {
     }
 #else
     T output{};
+    //NOLINTNEXTLINE(*-pointer-arithmetic)
     const auto *end = input.data() + input.size();
     if (std::from_chars(input.data(), end, output).ptr == end) {
       return output;
@@ -149,6 +150,7 @@ struct value_parser<T> {
 
   static std::optional<T> parse(std::string_view input) {
     T output{};
+    //NOLINTNEXTLINE(*-pointer-arithmetic)
     const auto *end = input.data() + input.size();
     if (auto res = std::from_chars(input.data(), end, output);
         res.ptr == end && res.ec != std::errc::result_out_of_range) {
@@ -193,9 +195,9 @@ template<typename T, typename ...Args>
   std::array<std::pair<std::string_view, T>, sizeof...(args) / 2 + 1> output;
   auto it = output.begin();
 
+  //NOLINTBEGIN(*-pointer-arithmetic)
   *it++ = std::pair<std::string_view, T>(k1, std::forward<T>(v1));
 
-  //NOLINTBEGIN(*-pointer-arithmetic)
   for (auto jt = buffer.begin(); it < output.end() && jt < buffer.end(); it++, jt += 2) {
     *it = std::pair<std::string_view, T>(jt->first, (jt + 1)->second);
   }
